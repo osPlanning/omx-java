@@ -13,11 +13,13 @@ public class OMXTest {
 	
 	public static void main(String[] args) {
 		
-		//write 
+		//create matrix
+		int numzones = 5000;
+		long start = System.nanoTime();
 		OmxFile omxfile = new OmxFile("test.omx");
 		int[] shape = new int[2];
-		shape[0] = 5;
-		shape[1] = 5;	
+		shape[0] = numzones;
+		shape[1] = numzones;	
 		omxfile.openNew(shape);
 		
 		//create matrix
@@ -33,30 +35,49 @@ public class OMXTest {
 		omxfile.addMatrix(mat);
 		
 		//add zone names
-		int[] zoneNames = {100,101,102,103,104};
+		int[] zoneNames = new int[shape[0]];
+		for (int j = 0 ; j < zoneNames.length; j++) {
+			zoneNames[j] = j + 100;
+		}
 		OmxLookup.OmxIntLookup omxZoneNums = new OmxLookup.OmxIntLookup("NO", zoneNames, 0);
 		omxfile.addLookup(omxZoneNums);
-		
+
+		long diff = System.nanoTime() - start;
+		double diffsec = (diff / 1000000000.0);
+		System.out.println("Create matrix " + String.valueOf(shape[0]) + " x " + String.valueOf(shape[1]) + ": " + String.valueOf(diffsec));
+
+		//write matrix
+		start = System.nanoTime();
 		omxfile.save();
+		omxfile.close();
+		diff = System.nanoTime() - start;
+		diffsec = (diff / 1000000000.0);
+		System.out.println("Write matrix " + String.valueOf(shape[0]) + " x " + String.valueOf(shape[1]) + ": " + String.valueOf(diffsec));
 		
 		//read matrix
-		omxfile = new OmxFile("test.omx");
-		omxfile.openReadOnly();
-		OmxMatrix.OmxDoubleMatrix omxMat = (OmxMatrix.OmxDoubleMatrix)omxfile.getMatrix("test");
-
+		start = System.nanoTime();
+		OmxFile omxfileIn = new OmxFile("test.omx");
+		omxfileIn.openReadOnly();
+		OmxMatrix.OmxDoubleMatrix omxMat = (OmxMatrix.OmxDoubleMatrix)omxfileIn.getMatrix("test");
 		double[][] values = omxMat.getData();
 		
-		for (int i = 0 ; i < values.length; i++) {
-			for (int j = 0 ; j < values[0].length; j++) {
-				System.out.println(values[i][j]);
-			}
-		}
+		diff = System.nanoTime() - start;
+		diffsec = (diff / 1000000000.0);
+		System.out.println("Read matrix " + String.valueOf(shape[0]) + " x " + String.valueOf(shape[1]) + ": " + String.valueOf(diffsec));
+		
+		//read matrix items 
+		//for (int i = 0 ; i < values.length; i++) {
+		//	for (int j = 0 ; j < values[0].length; j++) {
+		//		System.out.println(values[i][j]);
+		//	}
+		//}
 		
 		//read zone names
-		OmxLookup.OmxIntLookup zoneLabels = (OmxLookup.OmxIntLookup)omxfile.getLookup("NO");
-		for (int j = 0 ; j < zoneLabels.getLength(); j++) {
-			System.out.println(zoneLabels.getLookup()[j]);
-		}
+		//OmxLookup.OmxIntLookup zoneLabels = (OmxLookup.OmxIntLookup)omxfileIn.getLookup("NO");
+		//for (int j = 0 ; j < zoneLabels.getLength(); j++) {
+		//	System.out.println(zoneLabels.getLookup()[j]);
+		//}
+		//omxfileIn.close();
 		
 	}
 
