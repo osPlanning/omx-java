@@ -122,6 +122,7 @@ public class OmxFile extends AttributedElement implements AutoCloseable {
     }
 
     private void reload(boolean reloadHdf5File) {
+    	
         checkOpened();
         if (reloadHdf5File)
             hdf5File.reload();
@@ -130,16 +131,7 @@ public class OmxFile extends AttributedElement implements AutoCloseable {
         Map<String,Object> attributes = baseGroup.getAttributes();
         for (String attribute : attributes.keySet())
             setAttribute(attribute,attributes.get(attribute));
-        OmxGroup dataGroup = baseGroup.getGroup(OmxConstants.OmxNames.OMX_DATA_GROUP.getKey());
-        for (String datasetName : dataGroup.getDatasetNames())
-        	if(!matrices.containsKey(datasetName)) { //only load if matrix doesn't exist
-        		matrices.put(datasetName,OmxMatrix.getMatrix(dataGroup.getDataset(datasetName)));
-        	}
-        OmxGroup lookupGroup = baseGroup.getGroup(OmxConstants.OmxNames.OMX_LOOKUP_GROUP.getKey());
-        for (String lookupName : lookupGroup.getDatasetNames())
-        	if(!lookups.containsKey(lookupName)) { //only load if lookup doesn't exist
-        		lookups.put(lookupName,OmxLookup.getLookup(lookupGroup.getDataset(lookupName)));
-        	}
+        
     }
 
     /**
@@ -212,6 +204,12 @@ public class OmxFile extends AttributedElement implements AutoCloseable {
      */
     public OmxMatrix<?,?> getMatrix(String name) {
         checkOpened();
+        
+        OmxGroup baseGroup = hdf5File.getBaseGroup();
+        OmxGroup dataGroup = baseGroup.getGroup(OmxConstants.OmxNames.OMX_DATA_GROUP.getKey());
+        if(!matrices.containsKey(name)) { //only load if matrix doesn't exist
+        		matrices.put(name,OmxMatrix.getMatrix(dataGroup.getDataset(name)));
+        }
         if (!matrices.containsKey(name))
             throw new IllegalArgumentException("Matrix not found: " + name);
         return matrices.get(name);
@@ -226,7 +224,9 @@ public class OmxFile extends AttributedElement implements AutoCloseable {
      */
     public Set<String> getMatrixNames() {
         checkOpened();
-        return matrices.keySet();
+        OmxGroup baseGroup = hdf5File.getBaseGroup();
+        OmxGroup dataGroup = baseGroup.getGroup(OmxConstants.OmxNames.OMX_DATA_GROUP.getKey());
+        return (Set<String>) new HashSet<String>(dataGroup.getDatasetNames());
     }
 
     /**
@@ -260,6 +260,9 @@ public class OmxFile extends AttributedElement implements AutoCloseable {
     public void deleteMatrix(String name) {
         checkOpened();
         checkWritable();
+        OmxGroup baseGroup = hdf5File.getBaseGroup();
+        OmxGroup dataGroup = baseGroup.getGroup(OmxConstants.OmxNames.OMX_DATA_GROUP.getKey());
+
         if (!matrices.containsKey(name))
             throw new IllegalArgumentException("Matrix not found: " + name);
         matrices.remove(name);
@@ -278,6 +281,12 @@ public class OmxFile extends AttributedElement implements AutoCloseable {
      */
     public OmxLookup<?,?> getLookup(String name) {
         checkOpened();
+        
+        OmxGroup baseGroup = hdf5File.getBaseGroup();
+        OmxGroup lookupGroup = baseGroup.getGroup(OmxConstants.OmxNames.OMX_LOOKUP_GROUP.getKey());
+        if(!lookups.containsKey(name)) { //only load if lookup doesn't exist
+        		lookups.put(name,OmxLookup.getLookup(lookupGroup.getDataset(name)));
+        }
         if (!lookups.containsKey(name))
             throw new IllegalArgumentException("Lookup not found: " + name);
         return lookups.get(name);
@@ -292,7 +301,9 @@ public class OmxFile extends AttributedElement implements AutoCloseable {
      */
     public Set<String> getLookupNames() {
         checkOpened();
-        return lookups.keySet();
+        OmxGroup baseGroup = hdf5File.getBaseGroup();
+        OmxGroup lookupGroup = baseGroup.getGroup(OmxConstants.OmxNames.OMX_LOOKUP_GROUP.getKey());
+        return (Set<String>) new HashSet<String>(lookupGroup.getDatasetNames());
     }
 
     /**
@@ -466,22 +477,6 @@ public class OmxFile extends AttributedElement implements AutoCloseable {
             OmxMatrix.OmxDoubleMatrix mat1 = new OmxMatrix.OmxDoubleMatrix("mat1",mat1Data,mat1NA);
             mat1.setAttribute(OmxConstants.OmxNames.OMX_DATASET_TITLE_KEY.getKey(),"an int matrix");
 
-            int mat2NA = -99999;
-            int[][] mat2Data = new int[dim0][dim1];
-            for (int i = 0; i < dim0; i++)
-                for (int j = 0; j < dim1; j++)
-                    mat2Data[i][j] = r.nextInt(100);
-            OmxMatrix.OmxIntMatrix mat2 = new OmxMatrix.OmxIntMatrix("mat2",mat2Data,mat2NA);
-
-            int lookup1NA = -1;
-            int[] lookup1Data = new int[dim0];
-            Set<Integer> lookup1Used = new HashSet<>();
-            for (int i = 0; i < lookup1Data.length; i++) {
-                int lookup = i+1;
-                lookup1Data[i] = lookup1Used.add(lookup) ? lookup : lookup1NA;
-            }
-            OmxLookup.OmxIntLookup lookup1 = new OmxLookup.OmxIntLookup("lookup1",lookup1Data,lookup1NA);
-
             double lookup2NA = -99999;
             double[] lookup2Data = new double[dim1];
             Set<Double> lookup2Used = new HashSet<>();
@@ -493,8 +488,6 @@ public class OmxFile extends AttributedElement implements AutoCloseable {
 
             omxFile.openNew(shape);
             omxFile.addMatrix(mat1);
-            omxFile.addLookup(lookup1);
-            omxFile.addMatrix(mat2);
             omxFile.addLookup(lookup2);
             omxFile.save();
             System.out.println(omxFile.summary());
@@ -505,7 +498,7 @@ public class OmxFile extends AttributedElement implements AutoCloseable {
             omxFile.openReadWrite();
             System.out.println(omxFile.summary());
             omxFile.deleteMatrix("mat1");
-            omxFile.deleteLookup("lookup1");
+            omxFile.deleteLookup("lookup2");
             System.out.println(omxFile.summary());
         }
         

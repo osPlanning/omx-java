@@ -49,7 +49,6 @@ public class OMXTest {
 		//write matrix
 		start = System.nanoTime();
 		omxfile.save();
-		omxfile.close();
 		diff = System.nanoTime() - start;
 		diffsec = (diff / 1000000000.0);
 		System.out.println("Write matrix " + String.valueOf(shape[0]) + " x " + String.valueOf(shape[1]) + ": " + String.valueOf(diffsec));
