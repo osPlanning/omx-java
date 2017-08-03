@@ -146,11 +146,7 @@ public class OmxFile extends AttributedElement implements AutoCloseable {
         transferAttributes(baseGroup);
         //transfer datasets to data
         OmxMutableGroup dataGroup = baseGroup.getGroup(OmxConstants.OmxNames.OMX_DATA_GROUP.getKey()).getMutableGroup();
-        //first deletions, then updated/new data
         Collection<String> datasetNames = dataGroup.getDatasetNames();
-        for (String name : datasetNames)
-            if (!matrices.containsKey(name))
-                dataGroup.deleteDataset(name);
         for (String name : matrices.keySet()) {
             if (datasetNames.contains(name)) {
                 matrices.get(name).transfer(dataGroup.getDataset(name).getMutableDataset());
@@ -163,9 +159,6 @@ public class OmxFile extends AttributedElement implements AutoCloseable {
         //transfer lookups to lookup
         OmxMutableGroup lookupGroup = baseGroup.getGroup(OmxConstants.OmxNames.OMX_LOOKUP_GROUP.getKey()).getMutableGroup();
         Collection<String> lookupNames = lookupGroup.getDatasetNames();
-        for (String name : lookupNames)
-            if (!lookups.containsKey(name))
-                lookupGroup.deleteDataset(name);
         for (String name : lookups.keySet()) {
             if (lookupNames.contains(name)) {
                 lookups.get(name).transfer(lookupGroup.getDataset(name).getMutableDataset());
@@ -260,12 +253,15 @@ public class OmxFile extends AttributedElement implements AutoCloseable {
     public void deleteMatrix(String name) {
         checkOpened();
         checkWritable();
-        OmxGroup baseGroup = hdf5File.getBaseGroup();
-        OmxGroup dataGroup = baseGroup.getGroup(OmxConstants.OmxNames.OMX_DATA_GROUP.getKey());
-
         if (!matrices.containsKey(name))
             throw new IllegalArgumentException("Matrix not found: " + name);
         matrices.remove(name);
+        
+        OmxMutableGroup baseGroup = hdf5File.getBaseGroup().getMutableGroup();
+        OmxMutableGroup dataGroup = baseGroup.getGroup(OmxConstants.OmxNames.OMX_DATA_GROUP.getKey()).getMutableGroup();
+        if (!dataGroup.getDatasetNames().contains(name))
+                throw new IllegalArgumentException("Matrix not found: " + name);
+        dataGroup.deleteDataset(name);
     }
 
     /**
@@ -342,6 +338,12 @@ public class OmxFile extends AttributedElement implements AutoCloseable {
         if (!lookups.containsKey(name))
             throw new IllegalArgumentException("Lookup not found: " + name);
         lookups.remove(name);
+        
+        OmxMutableGroup baseGroup = hdf5File.getBaseGroup().getMutableGroup();
+        OmxMutableGroup lookupGroup = baseGroup.getGroup(OmxConstants.OmxNames.OMX_LOOKUP_GROUP.getKey()).getMutableGroup();
+        if (!lookupGroup.getDatasetNames().contains(name))
+                throw new IllegalArgumentException("Lookup not found: " + name);
+        lookupGroup.deleteDataset(name);
     }
 
     /**
