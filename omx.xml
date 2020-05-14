@@ -26,8 +26,8 @@
         <delete file="${module.omx.basedir}/release/omx.jar"/>
         <jar destfile="${module.omx.basedir}/release/omx.jar">
 
-          <zipgroupfileset dir="{module.omx.basedir}/../../hdf5/lib" includes="*.jar"/>
-          <zipgroupfileset dir="{module.omx.basedir}/../../hdf5/lib/ext" includes="*.jar"/>
+          <zipgroupfileset dir="${module.omx.basedir}/../../hdf5/lib" includes="*.jar"/>
+          <zipgroupfileset dir="${module.omx.basedir}/../../hdf5/lib/ext" includes="*.jar"/>
 
           <fileset dir="${module.omx.basedir}/bin">
             <include name="**/*.class"/>
