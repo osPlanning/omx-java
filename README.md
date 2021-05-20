@@ -24,7 +24,7 @@ the [HD5 2.8](http://www.hdfgroup.org/ftp/HDF5/releases/HDF-JAVA/HDF-JAVA-2.8/bi
 
 # Maven
 
-A maven release is hosted by the [Professorship for Modeling Spatial Mobility](https://www.bgu.tum.de/en/msm/start-page/) at TU Munich. You can access it by defining the following repository iny our .pom:
+A maven release is hosted by the [Professorship for Modeling Spatial Mobility](https://www.bgu.tum.de/en/msm/start-page/) at TU Munich. You can access it by defining the following repository in your .pom:
 ```
 <repositories>
   <repository>
@@ -41,7 +41,7 @@ A maven release is hosted by the [Professorship for Modeling Spatial Mobility](h
   </repository>
 </repositories>
 ```
-In the dependencies section of you. pom file add:
+In the dependencies section of your .pom file add:
 ```
 <dependency>
   <groupId>omx</groupId>
